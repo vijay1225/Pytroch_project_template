@@ -9,6 +9,48 @@ import torch.optim as optim
 import torch.nn.functional as F
 from tqdm import tqdm
 
+
+class MRI_DATASET(Dataset):
+
+	def __init__(self, root, train = True):
+
+		self.path = root
+		
+		if train:
+			self.path += '/train_set'
+		else:
+			self.path += '/test_set'
+		
+		labels = os.listdir(self.path)
+		gt_dict = {}
+		for i, label in enumerate(labels):
+			gt_dict[label] = i
+
+		self.index_list = []
+		for label in labels:
+			temp_path = self.path + '/' +label
+			temp_list = [[temp_path + '/' + img_name, gt_dict[label]] for img_name in os.listdir(temp_path)]
+			self.index_list += temp_list
+
+	def __len__(self):
+		return len(self.index_list)
+
+	def __getitem__(self, idx):
+
+		img_path , gt = self.index_list[idx]
+
+		image = imageio.imread(img_path)
+		# image = torch.from_numpy(image)
+		plt.imshow(image)
+		plt.show()
+		# image = torch.moveaxis(torch.resize(image, (512,512,3)), 0, 2)
+		image = np.resize(np.array(image), [512,512,3])
+		# image = np.moveaxis(image, 0, 2)
+		image = torch.from_numpy(image)
+
+		return image, gt
+
+
 def main():
 	parser = argparse.ArgumentParser(description='This is for introducing argparse')
 	parser.add_argument('--lr', default=0.03, type=float, help='this takes learning as input')
